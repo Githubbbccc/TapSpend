@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TapSpend · Modern Android Expense Tracker</title>
+  <style>
+    :root {
+      --primary: #00e676;
+      --primary-dark: #00c853;
+      --primary-light: rgba(0, 230, 118, 0.12);
+      --primary-glow: rgba(0, 230, 118, 0.35);
+      --accent-cyan: #00f0ff;
+      --surface: rgba(18, 24, 38, 0.72);
+      --surface-variant: rgba(30, 41, 59, 0.55);
+      --surface-card: rgba(15, 23, 42, 0.65);
+      --background: #080d1a;
+      --on-background: #ffffff;
+      --on-surface-variant: #94a3b8;
+      --outline: rgba(255, 255, 255, 0.08);
+      --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      --glass-blur: blur(16px);
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --primary: #00e676;
+      --primary-dark: #00c853;
+      --primary-light: rgba(0, 230, 118, 0.12);
+      --primary-glow: rgba(0, 230, 118, 0.4);
+      --accent-cyan: #00f0ff;
+      --surface: rgba(18, 24, 38, 0.72);
+      --surface-variant: rgba(30, 41, 59, 0.55);
+      --surface-card: rgba(15, 23, 42, 0.65);
+      --background: #060913;
+      --on-background: #ffffff;
+      --on-surface-variant: #94a3b8;
+      --outline: rgba(255, 255, 255, 0.08);
+      --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      --glass-blur: blur(16px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: #0b1120;
+      color: var(--on-background);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px;
+    }
+
+    /* Pixel / Galaxy Phone Frame with Subtle Animated Smoke Backdrop */
+    .device-mockup {
+      width: 100%;
+      max-width: 430px;
+      height: 94vh;
+      max-height: 900px;
+      background: radial-gradient(circle at 50% 10%, #0d1527 0%, #070b14 100%);
+      border-radius: 44px;
+      box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.95), 0 0 0 10px #111827, 0 0 0 12px #1f2937, 0 0 50px rgba(0, 230, 118, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient Futuristic Smoke Effect */
+    .smoke-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+      opacity: 0.55;
+    }
+
+    .smoke-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(65px);
+      mix-blend-mode: screen;
+      will-change: transform, opacity;
+      animation: floatSmoke 24s ease-in-out infinite alternate;
+    }
+
+    .smoke-orb-1 {
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(0, 230, 118, 0.22) 0%, rgba(0, 240, 255, 0.08) 50%, transparent 75%);
+      top: -80px;
+      left: -60px;
+      animation-duration: 22s;
+    }
+
+    .smoke-orb-2 {
+      width: 360px;
+      height: 360px;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.16) 0%, rgba(13, 148, 136, 0.1) 45%, transparent 75%);
+      bottom: 60px;
+      right: -80px;
+      animation-duration: 28s;
+      animation-delay: -6s;
+    }
+
+    .smoke-orb-3 {
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(6, 78, 59, 0.06) 60%, transparent 80%);
+      top: 40%;
+      left: 20%;
+      animation-duration: 32s;
+      animation-delay: -12s;
+    }
+
+    @keyframes floatSmoke {
+      0% {
+        transform: translate(0px, 0px) scale(1) rotate(0deg);
+        opacity: 0.45;
+      }
+      50% {
+        transform: translate(30px, -25px) scale(1.15) rotate(15deg);
+        opacity: 0.7;
+      }
+      100% {
+        transform: translate(-25px, 20px) scale(0.92) rotate(-10deg);
+        opacity: 0.5;
+      }
+    }
+
+    /* Android Status Bar */
+    .android-status-bar {
+      height: 28px;
+      background: rgba(6, 10, 20, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #94a3b8;
+      z-index: 50;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* Persistent Notification Mockup on Top (Luxury Glassmorphism) */
+    .notification-tray {
+      background: rgba(13, 22, 38, 0.78);
+      backdrop-filter: blur(20px);
+      color: #ffffff;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-bottom: 1px solid rgba(0, 230, 118, 0.25);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      z-index: 45;
+      position: relative;
+    }
+
+    .notif-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.74rem;
+    }
+
+    .notif-title {
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      letter-spacing: -0.01em;
+      text-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .notif-desc {
+      font-size: 0.74rem;
+      color: #94a3b8;
+    }
+
+    .notif-action-btn {
+      background: linear-gradient(135deg, rgba(0, 230, 118, 0.2), rgba(0, 240, 255, 0.15));
+      border: 1px solid rgba(0, 230, 118, 0.5);
+      color: #ffffff;
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 16px rgba(0, 230, 118, 0.25);
+      transition: all 0.2s;
+      align-self: flex-start;
+      margin-top: 2px;
+      backdrop-filter: blur(8px);
+    }
+    .notif-action-btn:hover {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(0, 230, 118, 0.45);
+    }
+    .notif-action-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* App Header */
+    .app-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      background: rgba(13, 20, 36, 0.65);
+      backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--outline);
+      z-index: 10;
+      position: relative;
+    }
+
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(0, 230, 118, 0.35);
+      overflow: hidden;
+      border: 1px solid rgba(0, 230, 118, 0.4);
+      background: #000;
+      flex-shrink: 0;
+    }
+
+    .brand-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+
+    .brand-tagline {
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: #64748b;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-tagline strong {
+      color: var(--primary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .theme-toggle-btn {
+      background: var(--surface-variant);
+      border: 1px solid var(--outline);
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--on-background);
+    }
+
+    /* Smart Natural Language Input Bar (Frosted Glass) */
+    .smart-input-container {
+      padding: 10px 16px 8px;
+      background: rgba(13, 20, 36, 0.45);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--outline);
+      z-index: 10;
+      position: relative;
+    }
+
+    .smart-input-box {
+      display: flex;
+      align-items: center;
+      background: rgba(18, 27, 46, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 6px 12px;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .smart-input-box:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 16px var(--primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      background: rgba(22, 33, 56, 0.85);
+    }
+
+    .smart-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 0.88rem;
+      color: #ffffff;
+      outline: none;
+      font-weight: 500;
+    }
+    .smart-input::placeholder {
+      color: #64748b;
+      font-size: 0.82rem;
+    }
+
+    .smart-submit-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #060913;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    /* Scrollable Body */
+    .app-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 85px;
+      z-index: 10;
+      position: relative;
+    }
+
+    /* Salary Mode Card (Glassmorphism) */
+    .salary-card {
+      background: var(--surface);
+      backdrop-filter: var(--glass-blur);
+      border-radius: 22px;
+      padding: 16px;
+      border: 1px solid var(--outline);
+      box-shadow: var(--card-shadow);
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .salary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .salary-badge {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      background: var(--primary-light);
+      border: 1px solid rgba(0, 230, 118, 0.25);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .salary-edit-link {
+      font-size: 0.74rem;
+      color: var(--on-surface-variant);
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .salary-edit-link:hover {
+      color: var(--primary);
+    }
+
+    .salary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .salary-stat-box {
+      background: var(--surface-variant);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--on-surface-variant);
+      margin-bottom: 2px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 1.18rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-value.remaining {
+      color: var(--primary);
+      text-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    /* Daily Average vs Safe Daily Budget Row */
+    .salary-micro-row {
+      display: flex;
+      justify-content: space-between;
+      background: var(--surface-variant);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 0.74rem;
+      color: var(--on-surface-variant);
+    }
+
+    .salary-micro-item strong {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    /* Dashboard Metrics 4-Box Grid */
+    .dashboard-metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--outline);
+      border-radius: 18px;
+      padding: 12px 14px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .metric-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+
+    .metric-number {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    /* Clean Spending Breakdown */
+    .section-card {
+      background: var(--surface);
+      backdrop-filter: var(--glass-blur);
+      border-radius: 20px;
+      padding: 16px;
+      border: 1px solid var(--outline);
+      box-shadow: var(--card-shadow);
+      margin-bottom: 14px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--on-background);
+    }
+
+    .breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--outline);
+      font-size: 0.82rem;
+    }
+    .breakdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .breakdown-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--on-background);
+    }
+
+    .breakdown-right {
+      font-weight: 800;
+      color: var(--on-background);
+    }
+
+    /* Simple Progress Bar for Visual clarity */
+    .progress-bar-bg {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent-cyan));
+      border-radius: 4px;
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    /* History List Items */
+    .history-group-title {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 14px 0 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .history-item {
+      background: var(--surface);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--outline);
+      border-radius: 16px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      box-shadow: var(--card-shadow);
+      transition: all 0.15s;
+    }
+    .history-item:hover {
+      border-color: rgba(0, 230, 118, 0.25);
+    }
+
+    .history-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .history-icon {
+      font-size: 1.35rem;
+      width: 38px;
+      height: 38px;
+      background: var(--surface-variant);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .history-text-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .history-text-sub {
+      font-size: 0.72rem;
+      color: var(--on-surface-variant);
+      margin-top: 2px;
+    }
+
+    .history-price {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-align: right;
+    }
+
+    .history-del-btn {
+      background: none;
+      border: none;
+      color: var(--on-surface-variant);
+      opacity: 0.5;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-left: 6px;
+    }
+    .history-del-btn:hover {
+      opacity: 1;
+      color: #ef4444;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 66px;
+      background: rgba(13, 20, 36, 0.85);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--outline);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 6px;
+      z-index: 30;
+    }
+
+    .bottom-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      flex: 1;
+      transition: color 0.15s;
+    }
+
+    .bottom-btn.active {
+      color: var(--primary);
+      text-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .bottom-btn .nav-icon {
+      font-size: 1.25rem;
+    }
+
+    .bottom-center-add {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, var(--primary), #00c853);
+      color: #060913;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 0 24px var(--primary-glow), 0 8px 16px rgba(0, 0, 0, 0.5);
+      margin-top: -24px;
+      transition: all 0.15s;
+    }
+    .bottom-center-add:active {
+      transform: scale(0.92);
+    }
+
+    /* ==========================================================
+       FAST EXPENSE ENTRY BOTTOM SHEET (EXACT 3-STEP FLOW)
+       ========================================================== */
+    .sheet-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(4, 7, 15, 0.78);
+      backdrop-filter: blur(14px);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .sheet-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet-container {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-bottom: none;
+      border-top-left-radius: 30px;
+      border-top-right-radius: 30px;
+      padding: 16px 20px 28px;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.2);
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .sheet-overlay.active .sheet-container {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 44px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      margin: 0 auto 12px;
+    }
+
+    .sheet-step-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .amount-display-hero {
+      text-align: center;
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--primary);
+      text-shadow: 0 0 25px var(--primary-glow);
+      margin-bottom: 16px;
+      letter-spacing: -0.03em;
+    }
+
+    /* Keypad Grid for Fast Typing */
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .key-btn {
+      background: rgba(30, 41, 59, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 14px;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .key-btn:active {
+      background: rgba(0, 230, 118, 0.2);
+      border-color: var(--primary);
+      transform: scale(0.96);
+    }
+
+    .btn-continue {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), #00c853);
+      color: #060913;
+      border: none;
+      padding: 16px;
+      border-radius: 18px;
+      font-size: 1.05rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 0 20px var(--primary-glow);
+      letter-spacing: 0.02em;
+    }
+    .btn-continue:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Step 2: Category Grid */
+    .category-grid-large {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 2px;
+    }
+
+    .category-tile {
+      background: rgba(30, 41, 59, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 14px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .category-tile:active {
+      transform: scale(0.95);
+      border-color: var(--primary);
+      background: rgba(0, 230, 118, 0.2);
+      box-shadow: 0 0 18px var(--primary-glow);
+    }
+
+    .cat-tile-icon {
+      font-size: 1.8rem;
+    }
+
+    .cat-tile-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Step 3: Success Confirmation & Optional Note */
+    .confirmed-card {
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .confirmed-check {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .confirmed-details {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--on-background);
+      margin-bottom: 18px;
+    }
+
+    .note-input-container {
+      display: none;
+      margin-bottom: 16px;
+    }
+
+    .note-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--outline);
+      border-radius: 12px;
+      background: var(--surface-variant);
+      color: var(--on-background);
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .note-input:focus {
+      border-color: var(--primary);
+      background: var(--surface);
+    }
+
+    .confirmed-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      background: rgba(30, 41, 59, 0.7);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+
+    .btn-primary-done {
+      flex: 1;
+      background: linear-gradient(135deg, var(--primary), #00c853);
+      color: #060913;
+      border: none;
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 900;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    /* History & Filter View */
+    .history-view {
+      display: none;
+    }
+
+    /* Toast */
+    .toast-pill {
+      position: absolute;
+      top: 110px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 230, 118, 0.4);
+      color: white;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 16px var(--primary-glow);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .toast-pill.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <div class="device-mockup">
+    
+    <!-- SUBTLE FLOATING AMBIENT SMOKE LAYER -->
+    <div class="smoke-layer">
+      <div class="smoke-orb smoke-orb-1"></div>
+      <div class="smoke-orb smoke-orb-2"></div>
+      <div class="smoke-orb smoke-orb-3"></div>
+    </div>
+
+    <!-- 1. ANDROID STATUS BAR -->
+    <div class="android-status-bar">
+      <span id="androidClock">09:41</span>
+      <span>TapSpend · Android</span>
+      <span>📶 5G  🔋 92%</span>
+    </div>
+
+    <!-- 2. NOTIFICATION-FIRST EXPERIENCE (PERSISTENT NOTIFICATION) -->
+    <div class="notification-tray" id="persistentNotification">
+      <div class="notif-header">
+        <div class="notif-title">
+          <span>💰 TapSpend</span>
+          <span style="opacity: 0.75; font-weight: normal; font-size: 0.68rem; color: #94a3b8;">• now</span>
+        </div>
+        <div style="font-size: 0.72rem; color: var(--primary); font-weight: 800; text-shadow: 0 0 8px var(--primary-glow);" id="notifTodayDisplay">
+          Today: Rs 0
+        </div>
+      </div>
+      <div class="notif-desc">Quickly record your expense</div>
+      <button type="button" class="notif-action-btn" onclick="startQuickEntryFlow()">
+        <span>+ Add Expense</span>
+      </button>
+    </div>
+
+    <!-- 3. TOP APP BAR WITH BRAND ICON & TAGLINE -->
+    <div class="app-bar">
+      <div class="app-brand">
+        <div class="brand-icon">
+          <img src="tapspend_icon.png" alt="TapSpend App Icon">
+        </div>
+        <div>
+          <div class="brand-title">TapSpend</div>
+          <div class="brand-tagline">Track it. Tap it. <strong>Done.</strong></div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="theme-toggle-btn" onclick="toggleDarkMode()" title="Toggle Theme">🌓</button>
+      </div>
+    </div>
+
+    <!-- 4. SMART NATURAL LANGUAGE EXPENSE INPUT ("250 biryani", "500 petrol") -->
+    <div class="smart-input-container">
+      <form class="smart-input-box" onsubmit="handleSmartEntrySubmit(event)">
+        <span style="font-size: 0.9rem;">🧠</span>
+        <input type="text" id="smartInput" class="smart-input" placeholder='Type "250 biryani", "500 petrol", "80 chai"...' autocomplete="off">
+        <button type="submit" class="smart-submit-btn">Quick Add</button>
+      </form>
+    </div>
+
+    <!-- 5. MAIN SCROLLABLE APP BODY -->
+    <div class="app-body" id="dashboardScreen">
+      
+      <!-- OPTIONAL INCOME / CASH-FLOW CARD -->
+      <div class="salary-card" id="optionalIncomeCard">
+        <div class="salary-header">
+          <span class="salary-badge" id="incomeBadgeLabel">💰 Optional Cash Flow</span>
+          <span class="salary-edit-link" id="incomeActionLink" onclick="openIncomeSettingsModal()">Add Income +</span>
+        </div>
+
+        <!-- State 1: When No Income is Configured (Clean universal default) -->
+        <div id="noIncomeStateView" style="display: block; padding: 4px 2px 2px;">
+          <div style="font-size: 0.84rem; color: #ffffff; font-weight: 700; margin-bottom: 4px;">Universal Expense Tracking Active</div>
+          <div style="font-size: 0.73rem; color: #94a3b8; line-height: 1.4;">
+            No income required. Freelancers, students, business owners & families track daily spending freely.
+          </div>
+        </div>
+
+        <!-- State 2: When Income is Enabled (Monthly, Weekly, Daily, Irregular) -->
+        <div id="activeIncomeStateView" style="display: none;">
+          <div class="salary-grid">
+            <div class="salary-stat-box">
+              <div class="stat-label" id="incomeTypeLabel">Current Income</div>
+              <div class="stat-value" id="incomeDisplay">Rs 0</div>
+            </div>
+            <div class="salary-stat-box">
+              <div class="stat-label">Spent</div>
+              <div class="stat-value" id="totalSpentMonthDisplay">Rs 0</div>
+            </div>
+          </div>
+
+          <div class="salary-stat-box" style="margin-bottom: 10px;">
+            <div class="stat-label">Remaining Money</div>
+            <div class="stat-value remaining" id="remainingSalaryDisplay">Rs 0</div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="salaryProgressBar" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="salary-micro-row">
+            <div class="salary-micro-item">
+              Daily avg: <strong id="dailyAverageDisplay">Rs 0</strong>
+            </div>
+            <div class="salary-micro-item">
+              Safe daily budget: <strong id="safeDailyDisplay">Rs 0</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNIVERSAL DASHBOARD 4-METRICS SUMMARY -->
+      <div class="dashboard-metrics-grid">
+        <div class="metric-card">
+          <div class="metric-title" id="dashMetric1Label">Today's Spending</div>
+          <div class="metric-number" id="dashToday">Rs 0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title" id="dashMetric2Label">This Week</div>
+          <div class="metric-number" id="dashWeek">Rs 0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title" id="dashMetric3Label">This Month</div>
+          <div class="metric-number" id="dashMonth">Rs 0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title" id="dashMetric4Label">Total Spending</div>
+          <div class="metric-number" style="color: var(--primary);" id="dashTotalSpent">Rs 0</div>
+        </div>
+      </div>
+
+      <!-- CLEAN SPENDING BREAKDOWN -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">Spending Breakdown</div>
+          <span style="font-size: 0.72rem; color: var(--on-surface-variant);" id="breakdownMonthLabel">This Month</span>
+        </div>
+        <div id="categoryBreakdownList">
+          <!-- Filled via JS -->
+        </div>
+      </div>
+
+      <!-- RECENT EXPENSES PREVIEW -->
+      <div class="history-group-title">
+        <span>Recent Expenses</span>
+        <span style="cursor:pointer; color: var(--primary);" onclick="switchScreen('history')">View All →</span>
+      </div>
+      <div id="recentExpensesList">
+        <!-- Filled via JS -->
+      </div>
+
+    </div>
+
+    <!-- 6. FULL EXPENSE HISTORY SCREEN -->
+    <div class="app-body history-view" id="historyScreen">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+        <h3 style="font-size: 1.1rem; font-weight: 800;">Expense History</h3>
+        <button onclick="exportCSVData()" style="background:var(--surface-variant); border:1px solid var(--outline); padding:5px 10px; border-radius:10px; font-size:0.75rem; font-weight:700; cursor:pointer; color:var(--on-background);">📥 Export CSV</button>
+      </div>
+
+      <!-- Search & Category Filter -->
+      <div style="display:flex; gap:8px; margin-bottom: 12px;">
+        <input type="text" id="historySearch" oninput="filterHistory()" placeholder="Search description or note..." class="smart-input" style="background:var(--surface); border:1.5px solid var(--outline); border-radius:12px; padding:8px 12px; flex:2;">
+        <select id="historyCatFilter" onchange="filterHistory()" style="background:var(--surface); border:1.5px solid var(--outline); border-radius:12px; padding:8px 10px; font-size:0.8rem; color:var(--on-background); flex:1;">
+          <option value="ALL">All Categories</option>
+        </select>
+      </div>
+
+      <div id="fullHistoryContainer">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- 7. ANDROID BOTTOM NAVIGATION BAR -->
+    <div class="bottom-bar">
+      <button class="bottom-btn active" id="navDashBtn" onclick="switchScreen('dashboard')">
+        <span class="nav-icon">📊</span>
+        <span>Dashboard</span>
+      </button>
+
+      <!-- Center Fast Add Button -->
+      <button class="bottom-center-add" onclick="startQuickEntryFlow()" title="Add Expense">
+        +
+      </button>
+
+      <button class="bottom-btn" id="navHistoryBtn" onclick="switchScreen('history')">
+        <span class="nav-icon">📜</span>
+        <span>History</span>
+      </button>
+    </div>
+
+    <!-- =======================================================
+         8. NOTIFICATION → ADD EXPENSE FAST 3-STEP ENTRY SHEET
+         ======================================================= -->
+    <div class="sheet-overlay" id="fastEntryOverlay" onclick="handleOverlayClick(event)">
+      <div class="sheet-container" id="fastEntryContainer">
+        <div class="sheet-handle"></div>
+
+        <!-- STEP 1: AMOUNT KEYPAD -->
+        <div id="entryStep1">
+          <div class="sheet-step-title">💵 How much did you spend?</div>
+          <div class="amount-display-hero" id="amountDisplay">Rs 0</div>
+
+          <div class="keypad-grid">
+            <button type="button" class="key-btn" onclick="pressDigit('1')">1</button>
+            <button type="button" class="key-btn" onclick="pressDigit('2')">2</button>
+            <button type="button" class="key-btn" onclick="pressDigit('3')">3</button>
+            <button type="button" class="key-btn" onclick="pressDigit('4')">4</button>
+            <button type="button" class="key-btn" onclick="pressDigit('5')">5</button>
+            <button type="button" class="key-btn" onclick="pressDigit('6')">6</button>
+            <button type="button" class="key-btn" onclick="pressDigit('7')">7</button>
+            <button type="button" class="key-btn" onclick="pressDigit('8')">8</button>
+            <button type="button" class="key-btn" onclick="pressDigit('9')">9</button>
+            <button type="button" class="key-btn" onclick="pressDigit('.')">.</button>
+            <button type="button" class="key-btn" onclick="pressDigit('0')">0</button>
+            <button type="button" class="key-btn" onclick="pressBackspace()">⌫</button>
+          </div>
+
+          <button type="button" class="btn-continue" id="continueToCategoryBtn" onclick="goToStep2Category()" disabled>
+            Continue →
+          </button>
+        </div>
+
+        <!-- STEP 2: CATEGORY SELECTION -->
+        <div id="entryStep2" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <button onclick="goToStep1Amount()" style="background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--on-surface-variant);">← Back</button>
+            <div class="sheet-step-title" style="margin-bottom:0;">🏷️ What was it for?</div>
+            <div style="font-weight: 800; color: var(--primary);" id="step2AmountBadge">Rs 100</div>
+          </div>
+
+          <div class="category-grid-large" id="categoryGridContainer">
+            <!-- Rendered from Categories list -->
+          </div>
+        </div>
+
+        <!-- STEP 3: OPTIONAL NOTE & INSTANT DONE -->
+        <div id="entryStep3" style="display: none;">
+          <div class="confirmed-card">
+            <div class="confirmed-check">Expense added ✓</div>
+            <div class="confirmed-details" id="confirmedSummaryText">
+              Rs 100 · ☕ Coffee
+            </div>
+
+            <div class="note-input-container" id="noteInputWrap">
+              <input type="text" id="entryNoteInput" class="note-input" placeholder="Type a few words for reminder (optional)...">
+            </div>
+
+            <div class="confirmed-actions">
+              <button type="button" class="btn-secondary" id="addNoteToggleBtn" onclick="showNoteField()">
+                [Add Note]
+              </button>
+              <button type="button" class="btn-primary-done" onclick="finishExpenseEntry()">
+                [Done]
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-pill" id="appToast">
+      <span>✓</span> <span id="toastMsg">Expense recorded</span>
+    </div>
+
+    <!-- MODAL: OPTIONAL INCOME CONFIGURATION -->
+    <div class="sheet-overlay" id="incomeConfigOverlay" onclick="handleIncomeOverlayClick(event)">
+      <div class="sheet-container" style="max-height: 80vh;">
+        <div class="sheet-handle"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+          <h3 style="font-size:1.1rem; font-weight:800; color:#ffffff;">💰 Income Tracking (Optional)</h3>
+          <button onclick="closeIncomeSettingsModal()" style="background:none; border:none; font-size:1.1rem; color:#94a3b8; cursor:pointer;">✕</button>
+        </div>
+        <p style="font-size:0.75rem; color:#94a3b8; margin-bottom: 14px; line-height: 1.4;">
+          TapSpend works 100% without income tracking. If you want cash-flow tracking, choose your income type or disable it anytime.
+        </p>
+
+        <label style="display:block; font-size:0.74rem; font-weight:700; color:#94a3b8; margin-bottom:6px;">Income Frequency / Type</label>
+        <select id="incomeTypeSelect" onchange="onIncomeTypeChange()" style="width:100%; padding:12px; background:rgba(30, 41, 59, 0.7); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#ffffff; font-size:0.88rem; outline:none; margin-bottom:12px;">
+          <option value="none">No Income Tracking (Default Expense Only)</option>
+          <option value="monthly">Monthly Income / Salary</option>
+          <option value="weekly">Weekly Income</option>
+          <option value="daily">Daily Income</option>
+          <option value="irregular">Irregular / Freelance / Multiple Sources</option>
+        </select>
+
+        <div id="incomeAmountInputWrap" style="display:none; margin-bottom:16px;">
+          <label style="display:block; font-size:0.74rem; font-weight:700; color:#94a3b8; margin-bottom:6px;" id="incomeAmountFieldLabel">Income Amount (PKR / Rs)</label>
+          <div class="smart-input-box" style="padding:10px 14px;">
+            <span style="color:var(--primary); font-weight:800;">Rs.</span>
+            <input type="number" id="incomeAmountInput" class="smart-input" placeholder="e.g. 60000 or 15000" step="1" min="0">
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn-secondary" onclick="closeIncomeSettingsModal()">Cancel</button>
+          <button type="button" class="btn-primary-done" onclick="saveIncomeConfiguration()">Save Income Settings</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- PRE-DEFINED CATEGORIES WITH ICONS & SMART KEYWORDS ---
+    const CATEGORIES = [
+      { id: "coffee", label: "Coffee", icon: "☕", keywords: ["coffee", "chai", "tea", "cafe", "espresso", "latte"] },
+      { id: "food", label: "Food", icon: "🍔", keywords: ["food", "biryani", "lunch", "dinner", "breakfast", "burger", "pizza", "roti", "shawarma", "snacks", "bakery"] },
+      { id: "travel", label: "Travel", icon: "🚕", keywords: ["travel", "petrol", "fuel", "ride", "uber", "careem", "rickshaw", "indrive", "fare", "bus", "transport"] },
+      { id: "shopping", label: "Shopping", icon: "🛒", keywords: ["shopping", "groceries", "supermarket", "mart", "clothes", "shoes", "bazar", "store", "general"] },
+      { id: "bills", label: "Bills", icon: "💡", keywords: ["bills", "electricity", "gas", "water", "wifi", "internet", "lesco", "sngpl", "kelectric", "ptcl"] },
+      { id: "home", label: "Home", icon: "🏠", keywords: ["home", "rent", "maintenance", "furniture", "repair", "clean", "cook", "maid"] },
+      { id: "health", label: "Health", icon: "💊", keywords: ["health", "medicine", "doctor", "pharmacy", "clinic", "panadol", "hospital", "test"] },
+      { id: "entertainment", label: "Entertainment", icon: "🎮", keywords: ["entertainment", "game", "movie", "cinema", "netflix", "outing", "gaming"] },
+      { id: "mobile", label: "Mobile", icon: "📱", keywords: ["mobile", "recharge", "jazz", "telenor", "zong", "easypaisa", "bundle", "card"] },
+      { id: "education", label: "Education", icon: "📚", keywords: ["education", "book", "fees", "course", "tuition", "stationery", "school"] },
+      { id: "other", label: "Other", icon: "➕", keywords: ["misc", "other", "extra"] }
+    ];
+
+    // --- APPLICATION STATE (Universal Expense Tracking First) ---
+    // Income is optional: mode can be 'none' | 'monthly' | 'weekly' | 'daily' | 'irregular'
+    let incomeSettings = {
+      mode: 'none',
+      amount: 0.0
+    };
+    let expenses = [];
+    let currentAmountInput = "";
+    let activeExpenseDraft = null;
+
+    // Clock
+    function updateAndroidClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('androidClock').innerText = `${h}:${m}`;
+    }
+    setInterval(updateAndroidClock, 1000);
+    updateAndroidClock();
+
+    // Init App
+    function initApp() {
+      // Load optional income settings (default: 'none')
+      const savedIncome = localStorage.getItem('tapspend_income_settings');
+      if (savedIncome) {
+        try {
+          incomeSettings = JSON.parse(savedIncome);
+        } catch(e) {
+          incomeSettings = { mode: 'none', amount: 0.0 };
+        }
+      }
+
+      // Load expenses
+      const savedExpenses = localStorage.getItem('tapspend_expenses');
+      if (savedExpenses) {
+        expenses = JSON.parse(savedExpenses);
+      } else {
+        // Universal Sample Data for all user types
+        const todayStr = getTodayISO();
+        expenses = [
+          { id: "e1", amount: 100.0, category: "Coffee", icon: "☕", title: "Tea & Chai", note: "Roadside tea", date: todayStr, timestamp: Date.now() - 3600000 * 4 },
+          { id: "e2", amount: 350.0, category: "Food", icon: "🍔", title: "Biryani Lunch", note: "Lunch break", date: todayStr, timestamp: Date.now() - 3600000 * 2 },
+          { id: "e3", amount: 250.0, category: "Travel", icon: "🚕", title: "Ride Fare", note: "Taxi/Ride", date: todayStr, timestamp: Date.now() - 3600000 * 1 },
+          { id: "e4", amount: 1200.0, category: "Shopping", icon: "🛒", title: "Groceries", note: "Daily essentials", date: todayStr, timestamp: Date.now() - 1800000 },
+          
+          // Past days
+          { id: "e5", amount: 3500.0, category: "Travel", icon: "🚕", title: "Fuel / Petrol", note: "", date: getPastDateISO(3), timestamp: Date.now() - 86400000 * 3 },
+          { id: "e6", amount: 4000.0, category: "Bills", icon: "💡", title: "Internet & Utility", note: "", date: getPastDateISO(6), timestamp: Date.now() - 86400000 * 6 },
+          { id: "e7", amount: 2720.0, category: "Shopping", icon: "🛒", title: "Bazar essentials", note: "", date: getPastDateISO(8), timestamp: Date.now() - 86400000 * 8 },
+          { id: "e8", amount: 2000.0, category: "Other", icon: "➕", title: "Miscellaneous", note: "", date: getPastDateISO(11), timestamp: Date.now() - 86400000 * 11 }
+        ];
+        saveExpenses();
+      }
+
+      // Populate Category filter options
+      const catSelect = document.getElementById('historyCatFilter');
+      CATEGORIES.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.label;
+        opt.innerText = `${c.icon} ${c.label}`;
+        catSelect.appendChild(opt);
+      });
+
+      renderCategoryGridTiles();
+      refreshAllMetricsAndUI();
+    }
+
+    function saveExpenses() {
+      localStorage.setItem('tapspend_expenses', JSON.stringify(expenses));
+    }
+
+    function formatPKR(val) {
+      return "Rs " + Number(val || 0).toLocaleString('en-PK', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function getTodayISO() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function getPastDateISO(daysAgo) {
+      const d = new Date();
+      d.setDate(d.getDate() - daysAgo);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    // ========================================================
+    // SPEED-FIRST 3-STEP FLOW (Notification -> Amount -> Category -> Done)
+    // ========================================================
+    function startQuickEntryFlow() {
+      currentAmountInput = "";
+      document.getElementById('amountDisplay').innerText = "Rs 0";
+      document.getElementById('continueToCategoryBtn').disabled = true;
+
+      // Reset Step visibility
+      document.getElementById('entryStep1').style.display = "block";
+      document.getElementById('entryStep2').style.display = "none";
+      document.getElementById('entryStep3').style.display = "none";
+      document.getElementById('noteInputWrap').style.display = "none";
+      document.getElementById('entryNoteInput').value = "";
+      document.getElementById('addNoteToggleBtn').style.display = "block";
+
+      document.getElementById('fastEntryOverlay').classList.add('active');
+    }
+
+    function handleOverlayClick(e) {
+      if (e.target.id === 'fastEntryOverlay') {
+        // If user already saved in step 3, simply close
+        closeFastEntryFlow();
+      }
+    }
+
+    function closeFastEntryFlow() {
+      document.getElementById('fastEntryOverlay').classList.remove('active');
+      activeExpenseDraft = null;
+    }
+
+    // Keypad Logic
+    function pressDigit(d) {
+      if (currentAmountInput.length >= 8) return;
+      if (d === '.' && currentAmountInput.includes('.')) return;
+      if (currentAmountInput === "" && d === '.') currentAmountInput = "0.";
+      else currentAmountInput += d;
+
+      document.getElementById('amountDisplay').innerText = `Rs ${currentAmountInput}`;
+      const num = parseFloat(currentAmountInput);
+      document.getElementById('continueToCategoryBtn').disabled = !(num && num > 0);
+    }
+
+    function pressBackspace() {
+      if (currentAmountInput.length > 0) {
+        currentAmountInput = currentAmountInput.slice(0, -1);
+      }
+      document.getElementById('amountDisplay').innerText = currentAmountInput.length > 0 ? `Rs ${currentAmountInput}` : "Rs 0";
+      const num = parseFloat(currentAmountInput);
+      document.getElementById('continueToCategoryBtn').disabled = !(num && num > 0);
+    }
+
+    function goToStep1Amount() {
+      document.getElementById('entryStep1').style.display = "block";
+      document.getElementById('entryStep2').style.display = "none";
+      document.getElementById('entryStep3').style.display = "none";
+    }
+
+    function goToStep2Category() {
+      const num = parseFloat(currentAmountInput);
+      if (!num || num <= 0) return;
+
+      document.getElementById('step2AmountBadge').innerText = `Rs ${currentAmountInput}`;
+      document.getElementById('entryStep1').style.display = "none";
+      document.getElementById('entryStep2').style.display = "block";
+      document.getElementById('entryStep3').style.display = "none";
+    }
+
+    // Render Large Category Tiles in Step 2
+    function renderCategoryGridTiles() {
+      const container = document.getElementById('categoryGridContainer');
+      container.innerHTML = "";
+
+      CATEGORIES.forEach(cat => {
+        const tile = document.createElement('div');
+        tile.className = "category-tile";
+        tile.innerHTML = `
+          <div class="cat-tile-icon">${cat.icon}</div>
+          <div class="cat-tile-label">${cat.label}</div>
+        `;
+        tile.onclick = () => onSelectCategory(cat);
+        container.appendChild(tile);
+      });
+    }
+
+    // When Category is tapped: INSTANTLY CREATE EXPENSE DRAFT AND SAVE IMMEDIATELY
+    function onSelectCategory(cat) {
+      const amountVal = parseFloat(currentAmountInput) || 0;
+
+      // Create expense object
+      activeExpenseDraft = {
+        id: "exp_" + Date.now(),
+        amount: Math.round(amountVal * 100) / 100,
+        category: cat.label,
+        icon: cat.icon,
+        title: cat.label,
+        note: "",
+        date: getTodayISO(),
+        timestamp: Date.now()
+      };
+
+      // IMMEDIATELY SAVE to satisfy principle: "The expense must be saved immediately."
+      expenses.unshift(activeExpenseDraft);
+      saveExpenses();
+      refreshAllMetricsAndUI();
+
+      // Transition to Step 3
+      document.getElementById('confirmedSummaryText').innerText = `Rs ${activeExpenseDraft.amount} · ${activeExpenseDraft.icon} ${activeExpenseDraft.category}`;
+      document.getElementById('entryStep2').style.display = "none";
+      document.getElementById('entryStep3').style.display = "block";
+    }
+
+    function showNoteField() {
+      document.getElementById('noteInputWrap').style.display = "block";
+      document.getElementById('entryNoteInput').focus();
+      document.getElementById('addNoteToggleBtn').style.display = "none";
+    }
+
+    function finishExpenseEntry() {
+      const noteVal = document.getElementById('entryNoteInput').value.trim();
+      if (noteVal && activeExpenseDraft) {
+        activeExpenseDraft.note = noteVal;
+        saveExpenses();
+        refreshAllMetricsAndUI();
+      }
+
+      closeFastEntryFlow();
+      showToast(`Saved Rs ${activeExpenseDraft ? activeExpenseDraft.amount : ''} successfully!`);
+    }
+
+    // ========================================================
+    // SMART EXPENSE ENTRY ("250 biryani", "500 petrol", "80 chai")
+    // ========================================================
+    function handleSmartEntrySubmit(e) {
+      e.preventDefault();
+      const inputEl = document.getElementById('smartInput');
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      const parsed = parseSmartExpenseText(text);
+      if (!parsed || parsed.amount <= 0) {
+        alert('Could not understand amount. Example format: "250 biryani" or "500 petrol"');
+        return;
+      }
+
+      // If category uncertain, trigger category selection sheet with prefilled amount
+      if (!parsed.category) {
+        currentAmountInput = String(parsed.amount);
+        document.getElementById('amountDisplay').innerText = `Rs ${currentAmountInput}`;
+        startQuickEntryFlow();
+        goToStep2Category();
+        inputEl.value = "";
+        return;
+      }
+
+      // Automatically construct and save
+      const newEntry = {
+        id: "exp_" + Date.now(),
+        amount: parsed.amount,
+        category: parsed.category.label,
+        icon: parsed.category.icon,
+        title: parsed.title,
+        note: parsed.note,
+        date: getTodayISO(),
+        timestamp: Date.now()
+      };
+
+      expenses.unshift(newEntry);
+      saveExpenses();
+      inputEl.value = "";
+      refreshAllMetricsAndUI();
+      showToast(`Smart Entry: Rs ${newEntry.amount} → ${newEntry.icon} ${newEntry.category}`);
+    }
+
+    function parseSmartExpenseText(input) {
+      const match = input.match(/(\d+(\.\d{1,2})?)/);
+      if (!match) return null;
+
+      const amount = parseFloat(match[1]);
+      let remainder = input.replace(match[0], '').replace(/^(rs\.?|pkr)\s*/i, '').trim();
+      const lower = remainder.toLowerCase();
+
+      // Find matching category
+      let matchedCat = null;
+      for (const cat of CATEGORIES) {
+        if (cat.keywords.some(k => lower.includes(k))) {
+          matchedCat = cat;
+          break;
+        }
+      }
+
+      // Title capitalization
+      let title = remainder ? remainder.charAt(0).toUpperCase() + remainder.slice(1) : (matchedCat ? matchedCat.label : "Expense");
+
+      return {
+        amount: amount,
+        category: matchedCat,
+        title: title,
+        note: remainder
+      };
+    }
+
+    // ========================================================
+    // OPTIONAL INCOME CONFIGURATION MODAL & MANAGEMENT
+    // ========================================================
+    function openIncomeSettingsModal() {
+      const overlay = document.getElementById('incomeConfigOverlay');
+      const select = document.getElementById('incomeTypeSelect');
+      const input = document.getElementById('incomeAmountInput');
+
+      select.value = incomeSettings.mode || 'none';
+      input.value = incomeSettings.amount > 0 ? incomeSettings.amount : '';
+      onIncomeTypeChange();
+
+      overlay.classList.add('active');
+    }
+
+    function closeIncomeSettingsModal() {
+      document.getElementById('incomeConfigOverlay').classList.remove('active');
+    }
+
+    function handleIncomeOverlayClick(e) {
+      if (e.target.id === 'incomeConfigOverlay') closeIncomeSettingsModal();
+    }
+
+    function onIncomeTypeChange() {
+      const mode = document.getElementById('incomeTypeSelect').value;
+      const wrap = document.getElementById('incomeAmountInputWrap');
+      const label = document.getElementById('incomeAmountFieldLabel');
+
+      if (mode === 'none') {
+        wrap.style.display = 'none';
+      } else {
+        wrap.style.display = 'block';
+        if (mode === 'monthly') label.innerText = "Monthly Income / Salary (PKR / Rs)";
+        else if (mode === 'weekly') label.innerText = "Weekly Income (PKR / Rs)";
+        else if (mode === 'daily') label.innerText = "Daily Income / Target (PKR / Rs)";
+        else if (mode === 'irregular') label.innerText = "Estimated / Base Income (PKR / Rs)";
+      }
+    }
+
+    function saveIncomeConfiguration() {
+      const mode = document.getElementById('incomeTypeSelect').value;
+      let amt = 0.0;
+
+      if (mode !== 'none') {
+        amt = parseFloat(document.getElementById('incomeAmountInput').value) || 0.0;
+        if (amt < 0) {
+          alert('Please enter a valid positive amount.');
+          return;
+        }
+      }
+
+      incomeSettings = {
+        mode: mode,
+        amount: amt
+      };
+
+      localStorage.setItem('tapspend_income_settings', JSON.stringify(incomeSettings));
+      closeIncomeSettingsModal();
+      refreshAllMetricsAndUI();
+
+      if (mode === 'none') {
+        showToast("Income tracking disabled · Pure Expense Tracking");
+      } else {
+        showToast(`Income set to ${formatPKR(amt)} (${mode})`);
+      }
+    }
+
+    function calculateMetrics() {
+      const todayISO = getTodayISO();
+      const now = new Date();
+      const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+      // Date calculations for days remaining in the month
+      const currentDayOfMonth = now.getDate();
+      const totalDaysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const daysRemainingInMonth = Math.max(1, totalDaysInMonth - currentDayOfMonth + 1);
+
+      let todaySpent = 0;
+      let weekSpent = 0;
+      let monthSpent = 0;
+      let totalAllTimeSpent = 0;
+      const categoryMonthTotals = {};
+
+      const sevenDaysAgoTime = Date.now() - (7 * 86400000);
+
+      expenses.forEach(e => {
+        const amt = parseFloat(e.amount) || 0;
+        totalAllTimeSpent += amt;
+
+        // Today
+        if (e.date === todayISO) {
+          todaySpent += amt;
+        }
+
+        // Past 7 Days (This Week)
+        if (e.timestamp >= sevenDaysAgoTime) {
+          weekSpent += amt;
+        }
+
+        // This Month
+        if (e.date && e.date.startsWith(currentMonthPrefix)) {
+          monthSpent += amt;
+          categoryMonthTotals[e.category] = (categoryMonthTotals[e.category] || 0) + amt;
+        }
+      });
+
+      // Income calculation depending on optional mode
+      const isIncomeActive = incomeSettings.mode && incomeSettings.mode !== 'none' && incomeSettings.amount > 0;
+      let currentPeriodIncome = isIncomeActive ? incomeSettings.amount : 0.0;
+      let remainingMoney = 0.0;
+      let dailyAverage = currentDayOfMonth > 0 ? (monthSpent / currentDayOfMonth) : 0;
+      let safeDailyBudget = 0.0;
+
+      if (isIncomeActive) {
+        if (incomeSettings.mode === 'daily') {
+          remainingMoney = Math.max(0, currentPeriodIncome - todaySpent);
+          safeDailyBudget = remainingMoney;
+        } else if (incomeSettings.mode === 'weekly') {
+          remainingMoney = Math.max(0, currentPeriodIncome - weekSpent);
+          safeDailyBudget = remainingMoney / 7;
+        } else {
+          // monthly / irregular
+          remainingMoney = Math.max(0, currentPeriodIncome - monthSpent);
+          safeDailyBudget = remainingMoney / daysRemainingInMonth;
+        }
+      }
+
+      return {
+        todaySpent,
+        weekSpent,
+        monthSpent,
+        totalAllTimeSpent,
+        isIncomeActive,
+        currentPeriodIncome,
+        remainingMoney,
+        dailyAverage,
+        safeDailyBudget,
+        categoryMonthTotals
+      };
+    }
+
+    // Refresh UI Components with Calculated Data
+    function refreshAllMetricsAndUI() {
+      const metrics = calculateMetrics();
+
+      // Persistent Notification Live Display: Today's spending
+      document.getElementById('notifTodayDisplay').innerText = `Today: ${formatPKR(metrics.todaySpent)}`;
+
+      // Update Income Card View States
+      const noIncomeView = document.getElementById('noIncomeStateView');
+      const activeIncomeView = document.getElementById('activeIncomeStateView');
+      const actionLink = document.getElementById('incomeActionLink');
+      const badgeLabel = document.getElementById('incomeBadgeLabel');
+
+      if (!metrics.isIncomeActive) {
+        // Universal default: No income assumed
+        noIncomeView.style.display = 'block';
+        activeIncomeView.style.display = 'none';
+        actionLink.innerText = "Add Income +";
+        badgeLabel.innerText = "⚡ Universal Tracker";
+
+        // Dashboard Metric Cards without income assumption
+        document.getElementById('dashMetric1Label').innerText = "Today's Spending";
+        document.getElementById('dashMetric2Label').innerText = "This Week";
+        document.getElementById('dashMetric3Label').innerText = "This Month";
+        document.getElementById('dashMetric4Label').innerText = "Total Spending";
+
+        document.getElementById('dashToday').innerText = formatPKR(metrics.todaySpent);
+        document.getElementById('dashWeek').innerText = formatPKR(metrics.weekSpent);
+        document.getElementById('dashMonth').innerText = formatPKR(metrics.monthSpent);
+        document.getElementById('dashTotalSpent').innerText = formatPKR(metrics.totalAllTimeSpent);
+        document.getElementById('dashTotalSpent').style.color = 'var(--primary)';
+      } else {
+        // Income enabled by user choice: Income -> Spent -> Remaining
+        noIncomeView.style.display = 'none';
+        activeIncomeView.style.display = 'block';
+        actionLink.innerText = "Edit ✎";
+        badgeLabel.innerText = `💰 ${incomeSettings.mode.toUpperCase()} CASH FLOW`;
+
+        document.getElementById('incomeTypeLabel').innerText = `${incomeSettings.mode.charAt(0).toUpperCase() + incomeSettings.mode.slice(1)} Income`;
+        document.getElementById('incomeDisplay').innerText = formatPKR(metrics.currentPeriodIncome);
+        document.getElementById('totalSpentMonthDisplay').innerText = formatPKR(metrics.monthSpent);
+        document.getElementById('remainingSalaryDisplay').innerText = formatPKR(metrics.remainingMoney);
+        document.getElementById('dailyAverageDisplay').innerText = formatPKR(metrics.dailyAverage);
+        document.getElementById('safeDailyDisplay').innerText = formatPKR(metrics.safeDailyBudget);
+
+        // Progress bar
+        const percentSpent = Math.min(100, (metrics.monthSpent / (metrics.currentPeriodIncome || 1)) * 100);
+        document.getElementById('salaryProgressBar').style.width = `${percentSpent}%`;
+        if (percentSpent > 85) {
+          document.getElementById('salaryProgressBar').style.background = '#ef4444';
+        } else {
+          document.getElementById('salaryProgressBar').style.background = 'linear-gradient(90deg, var(--primary), var(--accent-cyan))';
+        }
+
+        // Dashboard Labels enhanced with Remaining Income
+        document.getElementById('dashMetric1Label').innerText = "Today";
+        document.getElementById('dashMetric2Label').innerText = "This Week";
+        document.getElementById('dashMetric3Label').innerText = "This Month";
+        document.getElementById('dashMetric4Label').innerText = "Remaining";
+
+        document.getElementById('dashToday').innerText = formatPKR(metrics.todaySpent);
+        document.getElementById('dashWeek').innerText = formatPKR(metrics.weekSpent);
+        document.getElementById('dashMonth').innerText = formatPKR(metrics.monthSpent);
+        document.getElementById('dashTotalSpent').innerText = formatPKR(metrics.remainingMoney);
+        document.getElementById('dashTotalSpent').style.color = 'var(--primary)';
+      }
+
+      // Clean Spending Breakdown
+      renderSpendingBreakdown(metrics.categoryMonthTotals);
+
+      // Recent Expenses Preview
+      renderRecentExpenses();
+
+      // Full History if screen active
+      renderFullHistory();
+    }
+
+      // Clean Spending Breakdown
+      renderSpendingBreakdown(metrics.categoryMonthTotals);
+
+      // Recent Expenses Preview
+      renderRecentExpenses();
+
+      // Full History if screen active
+      renderFullHistory();
+    }
+
+    function renderSpendingBreakdown(catTotals) {
+      const container = document.getElementById('categoryBreakdownList');
+      const keys = Object.keys(catTotals);
+
+      if (keys.length === 0) {
+        container.innerHTML = `<div style="font-size:0.78rem; color:var(--on-surface-variant); padding:10px 0;">No spending recorded this month yet.</div>`;
+        return;
+      }
+
+      // Sort highest to lowest
+      keys.sort((a, b) => catTotals[b] - catTotals[a]);
+
+      let html = '';
+      keys.forEach(catName => {
+        const catObj = CATEGORIES.find(c => c.label === catName) || { icon: "🏷️" };
+        html += `
+          <div class="breakdown-item">
+            <div class="breakdown-left">
+              <span>${catObj.icon}</span>
+              <span>${catName}</span>
+            </div>
+            <div class="breakdown-right">
+              ${formatPKR(catTotals[catName])}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function renderRecentExpenses() {
+      const container = document.getElementById('recentExpensesList');
+      const recent = expenses.slice(0, 4);
+
+      if (recent.length === 0) {
+        container.innerHTML = `<div style="font-size:0.8rem; color:var(--on-surface-variant); padding:12px 0; text-align:center;">No expenses logged yet. Tap [+ Add Expense] above.</div>`;
+        return;
+      }
+
+      container.innerHTML = recent.map(item => `
+        <div class="history-item">
+          <div class="history-left">
+            <span class="history-icon">${item.icon || '🏷️'}</span>
+            <div>
+              <div class="history-text-title">${escapeHtml(item.title || item.category)}</div>
+              <div class="history-text-sub">${item.date} ${item.note ? '· ' + escapeHtml(item.note) : ''}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center;">
+            <div class="history-price">${formatPKR(item.amount)}</div>
+            <button class="history-del-btn" onclick="deleteExpenseItem('${item.id}')" title="Delete">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderFullHistory() {
+      const container = document.getElementById('fullHistoryContainer');
+      const search = (document.getElementById('historySearch')?.value || '').toLowerCase();
+      const catFilter = document.getElementById('historyCatFilter')?.value || 'ALL';
+
+      let filtered = expenses.filter(e => {
+        if (catFilter !== 'ALL' && e.category !== catFilter) return false;
+        if (search) {
+          const matchTitle = (e.title || '').toLowerCase().includes(search);
+          const matchNote = (e.note || '').toLowerCase().includes(search);
+          const matchCat = (e.category || '').toLowerCase().includes(search);
+          return matchTitle || matchNote || matchCat;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px 10px; color:var(--on-surface-variant); font-size:0.85rem;">No matching expenses found.</div>`;
+        return;
+      }
+
+      // Group by Date: TODAY, YESTERDAY, or date string
+      const todayISO = getTodayISO();
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayISO = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+
+      // Sort newest first
+      filtered.sort((a,b) => b.timestamp - a.timestamp);
+
+      let html = '';
+      let currentGroup = null;
+      let groupTotal = 0;
+
+      // Grouping map
+      const groups = {};
+      filtered.forEach(item => {
+        if (!groups[item.date]) groups[item.date] = [];
+        groups[item.date].push(item);
+      });
+
+      Object.keys(groups).forEach(dateStr => {
+        const items = groups[dateStr];
+        const dayTotal = items.reduce((sum, cur) => sum + cur.amount, 0);
+
+        let groupLabel = dateStr;
+        if (dateStr === todayISO) groupLabel = "TODAY";
+        else if (dateStr === yesterdayISO) groupLabel = "YESTERDAY";
+
+        html += `
+          <div class="history-group-title">
+            <span>${groupLabel}</span>
+            <span style="font-weight:900; color:var(--primary);">${formatPKR(dayTotal)}</span>
+          </div>
+        `;
+
+        items.forEach(item => {
+          html += `
+            <div class="history-item">
+              <div class="history-left">
+                <span class="history-icon">${item.icon || '🏷️'}</span>
+                <div>
+                  <div class="history-text-title">${escapeHtml(item.title || item.category)}</div>
+                  <div class="history-text-sub">${item.category} ${item.note ? '· ' + escapeHtml(item.note) : ''}</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center;">
+                <div class="history-price">${formatPKR(item.amount)}</div>
+                <button class="history-del-btn" onclick="deleteExpenseItem('${item.id}')" title="Delete">✕</button>
+              </div>
+            </div>
+          `;
+        });
+      });
+
+      container.innerHTML = html;
+    }
+
+    function filterHistory() {
+      renderFullHistory();
+    }
+
+    function deleteExpenseItem(id) {
+      if (confirm("Delete this expense?")) {
+        expenses = expenses.filter(e => e.id !== id);
+        saveExpenses();
+        refreshAllMetricsAndUI();
+        showToast("Expense deleted");
+      }
+    }
+
+    function exportCSVData() {
+      if (expenses.length === 0) {
+        alert("No expenses recorded yet.");
+        return;
+      }
+
+      let csv = "ID,Date,Category,Title,Amount (PKR),Note\n";
+      expenses.forEach(e => {
+        csv += `"${e.id}","${e.date}","${e.category}","${(e.title || '').replace(/"/g, '""')}",${e.amount},"${(e.note || '').replace(/"/g, '""')}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `TapSpend_Expenses_${getTodayISO()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Switch between Dashboard and History Screens
+    function switchScreen(screen) {
+      const dash = document.getElementById('dashboardScreen');
+      const hist = document.getElementById('historyScreen');
+      const navDash = document.getElementById('navDashBtn');
+      const navHist = document.getElementById('navHistoryBtn');
+
+      if (screen === 'dashboard') {
+        dash.style.display = 'block';
+        hist.style.display = 'none';
+        navDash.classList.add('active');
+        navHist.classList.remove('active');
+      } else {
+        dash.style.display = 'none';
+        hist.style.display = 'block';
+        navDash.classList.remove('active');
+        navHist.classList.add('active');
+        renderFullHistory();
+      }
+    }
+
+    // Toggle Light / Dark Mode
+    function toggleDarkMode() {
+      const body = document.body;
+      const current = body.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      body.setAttribute('data-theme', next);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('appToast');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    window.onload = initApp;
+  </script>
+</body>
+</html>
