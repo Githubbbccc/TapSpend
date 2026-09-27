@@ -21,19 +21,19 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
-      - name: Make Gradle Wrapper Executable
-        run: chmod +x gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
-        env:
-          ANDROID_HOME: /usr/local/lib/android/sdk
+        run: gradle assembleDebug --no-daemon --stacktrace
 
-      - name: Upload TapSpend APK Artifact
+      - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TapSpend-APK
+          name: TapSpend-v1.0.0-Debug-APK
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
+          if-no-files-found: error
