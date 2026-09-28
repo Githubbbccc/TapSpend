@@ -1487,8 +1487,11 @@
         refreshAllMetricsAndUI();
       }
 
+      // Capture the amount BEFORE closing, since closeFastEntryFlow() clears the draft
+      const savedAmount = activeExpenseDraft ? activeExpenseDraft.amount : null;
+
       closeFastEntryFlow();
-      showToast(`Saved Rs ${activeExpenseDraft ? activeExpenseDraft.amount : ''} successfully!`);
+      showToast(savedAmount !== null ? `Saved Rs ${savedAmount} successfully!` : "Expense saved");
     }
 
     // ========================================================
@@ -1508,9 +1511,11 @@
 
       // If category uncertain, trigger category selection sheet with prefilled amount
       if (!parsed.category) {
+        // startQuickEntryFlow() resets the keypad state, so prefill AFTER it runs
+        startQuickEntryFlow();
         currentAmountInput = String(parsed.amount);
         document.getElementById('amountDisplay').innerText = `Rs ${currentAmountInput}`;
-        startQuickEntryFlow();
+        document.getElementById('continueToCategoryBtn').disabled = false;
         goToStep2Category();
         inputEl.value = "";
         return;
@@ -1770,16 +1775,6 @@
         document.getElementById('dashTotalSpent').innerText = formatPKR(metrics.remainingMoney);
         document.getElementById('dashTotalSpent').style.color = 'var(--primary)';
       }
-
-      // Clean Spending Breakdown
-      renderSpendingBreakdown(metrics.categoryMonthTotals);
-
-      // Recent Expenses Preview
-      renderRecentExpenses();
-
-      // Full History if screen active
-      renderFullHistory();
-    }
 
       // Clean Spending Breakdown
       renderSpendingBreakdown(metrics.categoryMonthTotals);
