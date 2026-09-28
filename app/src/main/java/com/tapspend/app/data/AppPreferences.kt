@@ -19,7 +19,8 @@ class AppPreferences(private val context: Context) {
     }
 
     val monthlySalaryFlow: Flow<Double> = context.dataStore.data.map { prefs ->
-        prefs[KEY_SALARY] ?: 60000.0 // Default 60,000 PKR
+        // Default 0.0 = pure expense tracking (income is optional, opt-in only)
+        prefs[KEY_SALARY] ?: 0.0
     }
 
     val currencyFlow: Flow<String> = context.dataStore.data.map { prefs ->
